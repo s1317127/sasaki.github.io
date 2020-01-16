@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ゲーム</title>
+  
+    
+ 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.min.js"></script>
+      
+      <script src="https://d3js.org/d3.v3.min.js"></script>
+      
+      
+      <script src="https://d3js.org/d3.v5.min.js"></script>
+<script
+  src="https://code.jquery.com/jquery-3.4.1.min.js"
+  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+  crossorigin="anonymous">
+</script>
+
+  
+      
+  </head>
+
+  <body>
+<!--      画像は全部かきました!!!!!!!!!!!-->
+<!--  <h1>スマホからのセンサ情報を受信</h1>  -->
+  <div>
+    <div>あなたのID: <span id="myid"></span></div>
+    <div>ルームID: <span id="room"></span></div>
+<!--    <div>受信した情報はコンソールログで確認してください</div>-->
+ 
+ 
+  <div id="area1">●●ゲームをやめたいときはstopボタンを押して"ストップ"と言おう●●</div>
+    
+  </div>
+  
+  
+  <p class="center-box"><img id="mic" src="stop.png" width=80 height=60>
+<div id="result-div" class="large-text"></div>
+  
+  <style>
+.center-box{text-align:center;
+      position: absolute;
+    left:300px;
+    top:600px;
+	bottom: 0;
+    left: 800;
+      }
+   
+      </style>
+      
+    
+      <svg width="640" height="120" id="marumaru" >
+      <text x="40" y="65" font-family="sans-serif" font-size="50px" fill="blue" text-anchor="right"
+>プラスチックを減らそう!</text>
+  <circle id="maru1" cx="40" cy="60" r="10"></circle>
+  <circle id="maru2" cx="80" cy="60" r="10"></circle>
+  <circle id="maru3" cx="120" cy="60" r="10"></circle>
+  
+  <circle id="maru4" cx="120" cy="60" r="10"></circle>
+  
+  <circle id="maru5" cx="120" cy="60" r="10"></circle>
+  <circle id="maru6" cx="120" cy="60" r="10"></circle>
+  <circle id="maru7" cx="40" cy="60" r="10"></circle>
+  <circle id="maru8" cx="80" cy="60" r="10"></circle>
+  <circle id="maru9" cx="120" cy="60" r="10"></circle>
+  <circle id="maru10" cx="80" cy="60" r="10"></circle>
+  <circle id="maru11" cx="120" cy="60" r="10"></circle>
+  <circle id="maru12" cx="120" cy="60" r="10"></circle>
+  <circle id="maru13" cx="120" cy="60" r="10"></circle>
+  <circle id="maru14" cx="80" cy="60" r="10"></circle>
+  <circle id="maru15" cx="120" cy="60" r="10"></circle>
+  <circle id="maru16" cx="80" cy="60" r="10"></circle>
+          
+    
+</svg>
+
+    
+
+  <script>
+      
+      
+      
+      let circle = d3.selectAll("circle");
+circle.style("fill", "steelblue");
+circle.attr("r", 30);
+
+circle.attr("cx", function () {
+  return Math.random() * 720;
+}); 
+
+circle.data([32,57,112]).attr("r", function(d) {
+  return Math.sqrt(d); 
+});
+
+let svg = d3.select("svg");
+svg.selectAll("circle")
+  .data([32, 57, 112, 293])
+  .enter()
+  .append("circle")
+  .attr("cy", 60)
+  .attr("cx", function(d, i) {
+    console.log(d,i);
+    return i * 100 + 30; 
+  })
+  .attr("r", function(d) { return Math.sqrt(d); });
+      
+      
+      
+      
+    let room = "s1317127";
+    let socket = io.connect('https://qa.fujimura.com');    
+    let myid; 
+    let speedX=0;
+    let speedY=0;
+      
+      let score=0;
+      
+
+      const resultDiv = document.querySelector('#result-div');
+  const micDiv = document.querySelector('#mic');
+  let speakingtime = 0;
+      let rec = new webkitSpeechRecognition();
+  let stopped = true;
+  rec.continuous = true;
+  rec.interimResults = false;
+  rec.lang = 'ja-JP';
+    
+    rec.continuous = true;
+
+  micDiv.onclick = function () {
+    if (stopped == true) {
+      stopped = false;
+      resultDiv.innerHTML = "";
+      rec.start();
+    } else {
+      stopped = true;
+      rec.stop();
+    }
+  }
+
+  rec.onstart = function () { 
+    console.log('on start');
+    micDiv.setAttribute("src","stop.png");
+    speakingtime = 0;
+  };
+ 
+
+
+//  rec.onend = function () { 
+//    console.log('on end');
+//    micDiv.setAttribute("src","micoff.svg");
+//    if (stopped == false) {
+//      setTimeout(function () {
+//        rec.start();
+//      },speakingtime);
+//    }
+//  };
+    
+//    
+//    function recstart(text){
+//        let mo = new RegExp(".*こんにちは.*")
+//        if(mo.test(text)){
+//            console.log('on start');
+//            micDiv.setAttribute("src");
+//        }
+//    }
+
+  rec.onresult = function (e) {
+    rec.stop();
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        console.log(e);
+        let text = e.results[i][0].transcript;
+        console.log(text);
+        speakingtime = text.length * 200;
+        console.log("estimate:", speakingtime, "ms");
+        speak(reply(text));
+        resultDiv.innerHTML = text;
+      }
+    }
+  }
+  
+  function reply(text){
+      
+      let re = new RegExp(".*ストップ.*");
+      if (re.test(text)){
+            return "ゲームを終了しますか";
+        }
+  
+      let ree=new RegExp(".*はい.*");
+            if(ree.test(text)){ 
+                gameOver();
+            }
+      let reee=new RegExp(".*いいえ.*");
+            if(reee.test(text)){ 
+                return "再開します";
+            }
+//      let reeee=new RegExp(".*趣味.*");
+//            if(reeee.test(text)){ 
+//                return "プログラミングです";
+//            }
+        
+  }
+    
+
+  // 発話機能をインスタンス化
+  let msg = new SpeechSynthesisUtterance();
+  let voices = window.speechSynthesis.getVoices();
+
+  function speak(text) {
+    // 以下オプション設定（日本語は効かないもよう。。）
+    msg.voice = voices[7]; // 7:Google 日本人 ja-JP ※他は英語のみ
+    msg.volume = 1.0; // 音量 min 0 ~ max 1
+    msg.rate = 1.0; // 速度 min 0 ~ max 10
+    msg.pitch = 1.0; // 音程 min 0 ~ max 2
+
+    msg.text = text; // 喋る内容
+    msg.lang = 'ja-JP'; // en-US or ja-JP
+    // msg.lang = 'en-US'; // en-US or ja-JP
+
+    // 発話実行
+    speechSynthesis.speak(msg);
+  }
+  
+  // 終了時の処理
+  msg.onend = function (event) {
+    console.log('喋った時間：' + event.elapsedTime + 'ms');
+  }
+      
+      
+      
+      
+      
+    
+      document.querySelector("#room").innerHTML = room;
+      socket.on('mylogin', function(data) {
+      myid = data;
+      socket.emit('join', room); // 受信room IDを指定
+      document.querySelector("#myid").innerHTML = myid;
+      console.log("あなたのID: ", myid);
+    });
+      
+      
+      socket.on('sensor', function(data) {
+      console.log(data.b);
+      console.log(data.g);
+      
+      speedX=0.05*parseInt(data.g);
+      speedY=0.05*parseInt(data.b);
+    });
+   
+      
+      let x=0;
+      let y=0;
+
+      
+   /*追加   */
+      let r = 10;
+      let x0 = r;
+      let y0 = r;
+      let dx0 = 2;
+      let dy0 = 3;
+      let x1 = r+100;
+      let y1 = r;
+      let dx1 = 5;
+      let dy1 = 1;
+      let x2 = r;
+      let y2 = r+100;
+      let dx2 = 3;
+      let dy2 = 5;
+      let x3 = r;
+      let y3 = r+100;
+      let dx3 = 3;
+      let dy3 = 5;
+
+      
+  
+      
+      function preload(){
+//          cat=loadImage("mario3.png");
+//          teki1=loadImage("teki1.png");
+//          teki2=loadImage("teki2.png");
+//          teki3=loadImage("teki3.png");
+          haikei=loadImage("haikei1.png");
+          cat=loadImage("ohana1.png");
+          cat2=loadImage("ohana2.png");
+          cat3=loadImage("ohana3.png");
+          teki1=loadImage("bottle.png");
+          teki2=loadImage("bag.png");
+          teki3=loadImage("mart.png");
+          teki4=loadImage("pet.png");
+      }
+      
+      window.onload=function(ddd){
+          alert("<GameStart> 敵を避けて!");
+          
+      }
+      
+
+      
+      function setup() {
+
+          createCanvas(640,380);
+         
+          ellipseMode(RADIUS);
+          frameRate(50);
+          
+ 
+          x=width/2;
+          y=height/2;
+          
+
+          
+      }
+
+      
+      
+     
+      function draw() {
+           
+          background(200);
+         
+          x=x+speedX;
+          y=y+speedY;
+          image(haikei,0,0,width,height);
+          
+          
+          //kesu2();
+          
+          
+          image(teki1, x0, y0, 100,80 );
+          //x0 = x0 + dx0;
+          y0 = y0 + dy0;
+          if( y0 > height  ) {
+              x0=random(width);
+                             y0=+1;
+          }
+          //if( x0 > width-r || x0 < r )  dx0 = -dx0;
+
+          image(teki2, x1, y1, 100, 80 );
+          //x1 = x1 + dx1;
+          y1 = y1 + dy1;
+          if( y1 > height) {
+              x1=random(width);
+          y1 = +1;
+          }
+          //if( x1 > width-r || x1 < r )  dx1 = -dx1;
+
+          image(teki3, x2, y2, 100, 80 );
+          //x2 = x2 + dx2;
+          y2 = y2 + dy2;
+          if( y2 > height) {
+              x2=random(width);
+          y2 = +1;
+          }
+          
+          
+          image(teki4, x3, y3, 100, 80 );
+          //x2 = x2 + dx2;
+          y3 = y3 + dy3;
+          if( y3 > height) {
+              x3=random(width);
+          y3 = +1;
+          }
+ 
+          if(y>height) y=+1;
+          if(y<0) y=0;
+          
+          
+        
+        
+          
+          let distance0=Math.sqrt(Math.pow(x-x0,2)+Math.pow(y-y0,2));
+          if(distance0<30) {
+              cat=cat2;
+              cat3=cat2;
+           document.getElementById("maru1").style.display="none";
+              document.getElementById("maru4").style.display="none";
+              document.getElementById("maru5").style.display="none";
+              document.getElementById("maru6").style.display="none";
+              document.getElementById("maru11").style.display="none";
+              document.getElementById("maru12").style.display="none";
+              document.getElementById("maru13").style.display="none";
+              
+              
+               
+          console.log("hit");
+          return 0;
+          }
+                           
+           
+          let distance1=Math.sqrt(Math.pow(x-x1,2)+Math.pow(y-y1,2));
+         // if(distance1<50) gameOver();
+          if(distance1< 50) {cat=cat2;
+                             cat3=cat2;
+         document.getElementById("maru2").style.display="none";
+                             document.getElementById("maru7").style.display="none";
+                             document.getElementById("maru8").style.display="none";
+                             document.getElementById("maru14").style.display="none";
+                             return 0;
+                            }
+          
+          let distance2=Math.sqrt(Math.pow(x-x2,2)+Math.pow(y-y2,2));
+          //if(distance2<50) gameOver();
+          if(distance2< 50) {cat=cat3;
+                             cat2=cat3;
+                              document.getElementById("maru3").style.display="block";
+                             document.getElementById("maru9").style.display="block";
+                             document.getElementById("maru10").style.display="block";
+                             document.getElementById("maru15").style.display="block";
+        return 0;
+          
+                            }
+          
+          
+          let distance3=Math.sqrt(Math.pow(x-x3,2)+Math.pow(y-y3,2));
+          //if(distance2<50) gameOver();
+          if(distance3< 50) {cat=cat3;
+                             cat2=cat3;
+                              document.getElementById("maru3").style.display="block";
+                             document.getElementById("maru9").style.display="block";
+                             document.getElementById("maru10").style.display="block";
+                             document.getElementById("maru16").style.display="block";
+        
+          return 0;
+                            }
+          
+          
+          image(cat,x,y,120,120);
+          
+      }
+      
+
+      
+      function gameOver(){
+          alert("終了");
+           
+      }
+   
+      
+      
+  </script>
+    
+</body>
+</html>
